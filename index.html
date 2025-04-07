@@ -36,6 +36,23 @@
       rotation="-90 0 0"
       ></a-entity>
       
+      const waterGeometry = new THREE.PlaneGeometry(20, 20);
+            water = new THREE.Water(waterGeometry, {
+                textureWidth: 512,
+                textureHeight: 512,
+                waterNormals: new THREE.TextureLoader().load('https://threejs.org/examples/textures/waternormals.jpg', function (texture) {
+                    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+                }),
+                alpha: 1.0,
+                sunDirection: new THREE.Vector3(5, 10, 5),
+                sunColor: 0xffffff,
+                waterColor: 0x001e0f,
+                distortionScale: 3.7,
+                fog: scene.fog !== undefined
+            });
+            water.rotation.x = -Math.PI / 2;
+            water.position.set(5, 0, 0); // Position the water to the right of the tree
+            scene.add(water);
                  
     </a-scene>
   </body>
