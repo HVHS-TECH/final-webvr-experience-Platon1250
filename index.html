@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html>
   <head>
 
@@ -11,7 +11,7 @@
       <a-sky color="lightblue"></a-sky>
 
       <a-entity ply-model="src:Platon Sipkin valley nwe.ply" position="0 -8 -2" rotation="-90 -45.66 0"></a-entity>
-  
+      <a-entity ply-model="src: VoxelTree_Platon.ply" position="8.1562 -4.26655 -6.96365" rotation="-90 0 0"></a-entity>
 
       <a-entity 
       ply-model="src:VoxelTree_Platon.ply"
@@ -51,4 +51,90 @@
                  
     </a-scene>
   </body>
+</html> -->
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Animated Water in VR</title>
+    <!-- Include A-Frame -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+    <!-- Include Three.js and PLYLoader for loading the PLY file -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/loaders/PLYLoader.js"></script>
+</head>
+<body>
+    <a-scene>
+        <!-- Sky -->
+        <a-sky color="#87CEEB"></a-sky>
+
+        <!-- Ground -->
+        <a-plane position="0 0 -4" rotation="-90 0 0" width="50" height="50" color="#228B22"></a-plane>
+
+        <!-- Water (loaded from PLY file and animated) -->
+        <a-entity id="water" position="0 0 0" scale="0.1 0.1 0.1"></a-entity>
+
+        <!-- Camera with VR controls -->
+        <a-entity id="cameraRig" position="0 1.6 5">
+            <a-camera></a-camera>
+        </a-entity>
+    </a-scene>
+
+    <script>
+        // Register a custom A-Frame component to load and animate the water
+        AFRAME.registerComponent('water-loader', {
+            init: function () {
+                const el = this.el;
+                const scene = el.sceneEl.object3D;
+
+                // Load the PLY file
+                const loader = new THREE.PLYLoader();
+                loader.load('water.ply', (geometry) => {
+                    geometry.computeVertexNormals(); // Ensure proper lighting
+
+                    // Create a shader material for the water with wave animation
+                    const waterMaterial = new THREE.ShaderMaterial({
+                        uniforms: {
+                            time: { value: 0.0 },
+                            color1: { value: new THREE.Color(0x009933) }, // (0, 153, 51)
+                            color2: { value: new THREE.Color(0x666633) }  // (102, 102, 51)
+                        },
+                        vertexShader: `
+                            uniform float time;
+                            varying vec3 vColor;
+                            void main() {
+                                vColor = color; // Pass vertex color to fragment shader
+                                // Animate the z position to create waves
+                                vec3 pos = position;
+                                pos.z += sin(pos.x * 0.5 + time) * cos(pos.y * 0.5 + time) * 0.1;
+                                gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+                            }
+                        `,
+                        fragmentShader: `
+                            varying vec3 vColor;
+                            void main() {
+                                gl_FragColor = vec4(vColor, 1.0);
+                            }
+                        `,
+                        vertexColors: true
+                    });
+
+                    // Create the mesh
+                    const waterMesh = new THREE.Mesh(geometry, waterMaterial);
+                    el.setObject3D('mesh', waterMesh);
+
+                    // Animation loop to update the time uniform
+                    this.el.sceneEl.addEventListener('renderstart', () => {
+                        this.el.sceneEl.renderer.setAnimationLoop(() => {
+                            waterMaterial.uniforms.time.value += 0.05; // Update time for wave animation
+                        });
+                    });
+                });
+            }
+        });
+
+        // Apply the component to the water entity
+        document.querySelector('#water').setAttribute('water-loader', '');
+    </script>
+</body>
 </html>
